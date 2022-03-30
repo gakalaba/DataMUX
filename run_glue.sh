@@ -159,7 +159,7 @@ done
 SAVE_STEPS=10000
 MAX_SEQ_LENGTH=128
 
-if [ "$SETTING" == "retrieval_pretraining" ]; then
+if [ "$SETTING" = "retrieval_pretraining" ]; then
     
     RANDOM_ENCODING_NORM=20
     RETRIEVAL_PERCENTAGE=1.0
