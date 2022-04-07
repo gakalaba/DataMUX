@@ -24,8 +24,8 @@ from packaging import version
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 
-from ...activations import ACT2FN, gelu
-from ...modeling_outputs import (
+from transformers.activations import ACT2FN, gelu
+from transformers.modeling_outputs import (
     BaseModelOutputWithPastAndCrossAttentions,
     BaseModelOutputWithPoolingAndCrossAttentions,
     CausalLMOutputWithCrossAttentions,
@@ -35,20 +35,20 @@ from ...modeling_outputs import (
     SequenceClassifierOutput,
     TokenClassifierOutput,
 )
-from ...modeling_utils import (
+from transformers.modeling_utils import (
     PreTrainedModel,
     apply_chunking_to_forward,
     find_pruneable_heads_and_indices,
     prune_linear_layer,
 )
-from ...utils import (
-    add_code_sample_docstrings,
-    add_start_docstrings,
-    add_start_docstrings_to_model_forward,
+from transformers.utils import (
+    #add_code_sample_docstrings,
+    # add_start_docstrings,
+    # add_start_docstrings_to_model_forward,
     logging,
-    replace_return_docstrings,
+    # replace_return_docstrings,
 )
-from .configuration_roberta import RobertaConfig
+from transformers import RobertaConfig
 
 
 logger = logging.get_logger(__name__)
@@ -677,10 +677,10 @@ ROBERTA_INPUTS_DOCSTRING = r"""
 """
 
 
-@add_start_docstrings(
-    "The bare RoBERTa Model transformer outputting raw hidden-states without any specific head on top.",
-    ROBERTA_START_DOCSTRING,
-)
+# @add_start_docstrings(
+#     "The bare RoBERTa Model transformer outputting raw hidden-states without any specific head on top.",
+#     ROBERTA_START_DOCSTRING,
+# )
 class RobertaModel(RobertaPreTrainedModel):
     """
     The model can behave as an encoder (with only self-attention) as well as a decoder, in which case a layer of
@@ -722,13 +722,13 @@ class RobertaModel(RobertaPreTrainedModel):
         for layer, heads in heads_to_prune.items():
             self.encoder.layer[layer].attention.prune_heads(heads)
 
-    @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @add_code_sample_docstrings(
-        processor_class=_TOKENIZER_FOR_DOC,
-        checkpoint=_CHECKPOINT_FOR_DOC,
-        output_type=BaseModelOutputWithPoolingAndCrossAttentions,
-        config_class=_CONFIG_FOR_DOC,
-    )
+    # @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    # @add_code_sample_docstrings(
+    #     processor_class=_TOKENIZER_FOR_DOC,
+    #     checkpoint=_CHECKPOINT_FOR_DOC,
+    #     output_type=BaseModelOutputWithPoolingAndCrossAttentions,
+    #     config_class=_CONFIG_FOR_DOC,
+    # )
     # Copied from transformers.models.bert.modeling_bert.BertModel.forward
     def forward(
         self,
@@ -858,9 +858,9 @@ class RobertaModel(RobertaPreTrainedModel):
         )
 
 
-@add_start_docstrings(
-    """RoBERTa Model with a `language modeling` head on top for CLM fine-tuning.""", ROBERTA_START_DOCSTRING
-)
+# @add_start_docstrings(
+#     """RoBERTa Model with a `language modeling` head on top for CLM fine-tuning.""", ROBERTA_START_DOCSTRING
+# )
 class RobertaForCausalLM(RobertaPreTrainedModel):
     _keys_to_ignore_on_save = [r"lm_head.decoder.weight", r"lm_head.decoder.bias"]
     _keys_to_ignore_on_load_missing = [r"position_ids", r"lm_head.decoder.weight", r"lm_head.decoder.bias"]
@@ -887,8 +887,8 @@ class RobertaForCausalLM(RobertaPreTrainedModel):
     def set_output_embeddings(self, new_embeddings):
         self.lm_head.decoder = new_embeddings
 
-    @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @replace_return_docstrings(output_type=CausalLMOutputWithCrossAttentions, config_class=_CONFIG_FOR_DOC)
+    # @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    # @replace_return_docstrings(output_type=CausalLMOutputWithCrossAttentions, config_class=_CONFIG_FOR_DOC)
     def forward(
         self,
         input_ids: Optional[torch.LongTensor] = None,
@@ -1003,7 +1003,7 @@ class RobertaForCausalLM(RobertaPreTrainedModel):
         return reordered_past
 
 
-@add_start_docstrings("""RoBERTa Model with a `language modeling` head on top.""", ROBERTA_START_DOCSTRING)
+# @add_start_docstrings("""RoBERTa Model with a `language modeling` head on top.""", ROBERTA_START_DOCSTRING)
 class RobertaForMaskedLM(RobertaPreTrainedModel):
     _keys_to_ignore_on_save = [r"lm_head.decoder.weight", r"lm_head.decoder.bias"]
     _keys_to_ignore_on_load_missing = [r"position_ids", r"lm_head.decoder.weight", r"lm_head.decoder.bias"]
@@ -1033,16 +1033,16 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
     def set_output_embeddings(self, new_embeddings):
         self.lm_head.decoder = new_embeddings
 
-    @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @add_code_sample_docstrings(
-        processor_class=_TOKENIZER_FOR_DOC,
-        checkpoint=_CHECKPOINT_FOR_DOC,
-        output_type=MaskedLMOutput,
-        config_class=_CONFIG_FOR_DOC,
-        mask="<mask>",
-        expected_output="' Paris'",
-        expected_loss=0.1,
-    )
+    # @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    # @add_code_sample_docstrings(
+    #     processor_class=_TOKENIZER_FOR_DOC,
+    #     checkpoint=_CHECKPOINT_FOR_DOC,
+    #     output_type=MaskedLMOutput,
+    #     config_class=_CONFIG_FOR_DOC,
+    #     mask="<mask>",
+    #     expected_output="' Paris'",
+    #     expected_loss=0.1,
+    # )
     def forward(
         self,
         input_ids: Optional[torch.LongTensor] = None,
@@ -1128,13 +1128,13 @@ class RobertaLMHead(nn.Module):
         self.bias = self.decoder.bias
 
 
-@add_start_docstrings(
-    """
-    RoBERTa Model transformer with a sequence classification/regression head on top (a linear layer on top of the
-    pooled output) e.g. for GLUE tasks.
-    """,
-    ROBERTA_START_DOCSTRING,
-)
+# @add_start_docstrings(
+#     """
+#     RoBERTa Model transformer with a sequence classification/regression head on top (a linear layer on top of the
+#     pooled output) e.g. for GLUE tasks.
+#     """,
+#     ROBERTA_START_DOCSTRING,
+# )
 class RobertaForSequenceClassification(RobertaPreTrainedModel):
     _keys_to_ignore_on_load_missing = [r"position_ids"]
 
@@ -1149,15 +1149,15 @@ class RobertaForSequenceClassification(RobertaPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @add_code_sample_docstrings(
-        processor_class=_TOKENIZER_FOR_DOC,
-        checkpoint="cardiffnlp/twitter-roberta-base-emotion",
-        output_type=SequenceClassifierOutput,
-        config_class=_CONFIG_FOR_DOC,
-        expected_output="'optimism'",
-        expected_loss=0.08,
-    )
+    # @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    # @add_code_sample_docstrings(
+    #     processor_class=_TOKENIZER_FOR_DOC,
+    #     checkpoint="cardiffnlp/twitter-roberta-base-emotion",
+    #     output_type=SequenceClassifierOutput,
+    #     config_class=_CONFIG_FOR_DOC,
+    #     expected_output="'optimism'",
+    #     expected_loss=0.08,
+    # )
     def forward(
         self,
         input_ids: Optional[torch.LongTensor] = None,
@@ -1228,13 +1228,13 @@ class RobertaForSequenceClassification(RobertaPreTrainedModel):
         )
 
 
-@add_start_docstrings(
-    """
-    Roberta Model with a multiple choice classification head on top (a linear layer on top of the pooled output and a
-    softmax) e.g. for RocStories/SWAG tasks.
-    """,
-    ROBERTA_START_DOCSTRING,
-)
+# @add_start_docstrings(
+#     """
+#     Roberta Model with a multiple choice classification head on top (a linear layer on top of the pooled output and a
+#     softmax) e.g. for RocStories/SWAG tasks.
+#     """,
+#     ROBERTA_START_DOCSTRING,
+# )
 class RobertaForMultipleChoice(RobertaPreTrainedModel):
     _keys_to_ignore_on_load_missing = [r"position_ids"]
 
@@ -1248,13 +1248,13 @@ class RobertaForMultipleChoice(RobertaPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, num_choices, sequence_length"))
-    @add_code_sample_docstrings(
-        processor_class=_TOKENIZER_FOR_DOC,
-        checkpoint=_CHECKPOINT_FOR_DOC,
-        output_type=MultipleChoiceModelOutput,
-        config_class=_CONFIG_FOR_DOC,
-    )
+    # @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, num_choices, sequence_length"))
+    # @add_code_sample_docstrings(
+    #     processor_class=_TOKENIZER_FOR_DOC,
+    #     checkpoint=_CHECKPOINT_FOR_DOC,
+    #     output_type=MultipleChoiceModelOutput,
+    #     config_class=_CONFIG_FOR_DOC,
+    # )
     def forward(
         self,
         input_ids: Optional[torch.LongTensor] = None,
@@ -1321,13 +1321,13 @@ class RobertaForMultipleChoice(RobertaPreTrainedModel):
         )
 
 
-@add_start_docstrings(
-    """
-    Roberta Model with a token classification head on top (a linear layer on top of the hidden-states output) e.g. for
-    Named-Entity-Recognition (NER) tasks.
-    """,
-    ROBERTA_START_DOCSTRING,
-)
+# @add_start_docstrings(
+#     """
+#     Roberta Model with a token classification head on top (a linear layer on top of the hidden-states output) e.g. for
+#     Named-Entity-Recognition (NER) tasks.
+#     """,
+#     ROBERTA_START_DOCSTRING,
+# )
 class RobertaForTokenClassification(RobertaPreTrainedModel):
     _keys_to_ignore_on_load_unexpected = [r"pooler"]
     _keys_to_ignore_on_load_missing = [r"position_ids"]
@@ -1346,15 +1346,15 @@ class RobertaForTokenClassification(RobertaPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @add_code_sample_docstrings(
-        processor_class=_TOKENIZER_FOR_DOC,
-        checkpoint="Jean-Baptiste/roberta-large-ner-english",
-        output_type=TokenClassifierOutput,
-        config_class=_CONFIG_FOR_DOC,
-        expected_output="['O', 'ORG', 'ORG', 'O', 'O', 'O', 'O', 'O', 'LOC', 'O', 'LOC', 'LOC']",
-        expected_loss=0.01,
-    )
+    # @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    # @add_code_sample_docstrings(
+    #     processor_class=_TOKENIZER_FOR_DOC,
+    #     checkpoint="Jean-Baptiste/roberta-large-ner-english",
+    #     output_type=TokenClassifierOutput,
+    #     config_class=_CONFIG_FOR_DOC,
+    #     expected_output="['O', 'ORG', 'ORG', 'O', 'O', 'O', 'O', 'O', 'LOC', 'O', 'LOC', 'LOC']",
+    #     expected_loss=0.01,
+    # )
     def forward(
         self,
         input_ids: Optional[torch.LongTensor] = None,
@@ -1430,13 +1430,13 @@ class RobertaClassificationHead(nn.Module):
         return x
 
 
-@add_start_docstrings(
-    """
-    Roberta Model with a span classification head on top for extractive question-answering tasks like SQuAD (a linear
-    layers on top of the hidden-states output to compute `span start logits` and `span end logits`).
-    """,
-    ROBERTA_START_DOCSTRING,
-)
+# @add_start_docstrings(
+#     """
+#     Roberta Model with a span classification head on top for extractive question-answering tasks like SQuAD (a linear
+#     layers on top of the hidden-states output to compute `span start logits` and `span end logits`).
+#     """,
+#     ROBERTA_START_DOCSTRING,
+# )
 class RobertaForQuestionAnswering(RobertaPreTrainedModel):
     _keys_to_ignore_on_load_unexpected = [r"pooler"]
     _keys_to_ignore_on_load_missing = [r"position_ids"]
@@ -1451,15 +1451,15 @@ class RobertaForQuestionAnswering(RobertaPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @add_code_sample_docstrings(
-        processor_class=_TOKENIZER_FOR_DOC,
-        checkpoint="deepset/roberta-base-squad2",
-        output_type=QuestionAnsweringModelOutput,
-        config_class=_CONFIG_FOR_DOC,
-        expected_output="' puppet'",
-        expected_loss=0.86,
-    )
+    # @add_start_docstrings_to_model_forward(ROBERTA_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    # @add_code_sample_docstrings(
+    #     processor_class=_TOKENIZER_FOR_DOC,
+    #     checkpoint="deepset/roberta-base-squad2",
+    #     output_type=QuestionAnsweringModelOutput,
+    #     config_class=_CONFIG_FOR_DOC,
+    #     expected_output="' puppet'",
+    #     expected_loss=0.86,
+    # )
     def forward(
         self,
         input_ids: Optional[torch.LongTensor] = None,

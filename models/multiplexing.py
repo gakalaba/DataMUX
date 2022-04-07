@@ -105,7 +105,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             embedding_output = torch.sum(embedding_output, dim=1) / math.sqrt(
                 self.num_instances
             )
-        else:
+      else:
             embedding_output = embedding_output.view(
                 modified_batch_size,
                 num_instances,
