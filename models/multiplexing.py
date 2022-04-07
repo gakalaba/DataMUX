@@ -5,7 +5,7 @@ from transformers.utils import logging
 import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss, MSELoss
-from transformers import (
+from .delayMXRoberta import (
     RobertaModel,
 )
 from transformers.modeling_outputs import SequenceClassifierOutput, ModelOutput
