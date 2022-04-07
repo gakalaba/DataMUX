@@ -39,6 +39,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
         self.demuxing_variant = config.demuxing_variant
         self.retrieval_loss_coeff = config.retrieval_loss_coeff
         self.task_loss_coeff = config.task_loss_coeff
+        self.multiplex_layer_index = config.multiplex_layer_index # The layer at which we want to start multiplexing
 
         self.roberta = RobertaModel(config, add_pooling_layer=False)
         if config.demuxing_variant == "index":
@@ -83,6 +84,44 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             self.instance_embedding.requires_grad = False
         else:
             self.instance_embedding.requires_grad = True
+
+    def multiplex(self, embedding_output=None, modified_batch_size=None,
+                num_instances=None,
+                modified_seq_length=None,
+                embedding_dim=None):
+      if self.muxing_variant == "random_ortho":
+            embedding_output = embedding_output.view(
+                modified_batch_size,
+                num_instances,
+                modified_seq_length,
+                embedding_dim,
+            )
+            embedding_output = torch.matmul(
+                self.instance_embedding, embedding_output.permute(0, 1, 3, 2)
+            )
+            # swap the last 2 dimensions again
+            embedding_output = embedding_output.permute(0, 1, 3, 2)
+            # average across the instances
+            embedding_output = torch.sum(embedding_output, dim=1) / math.sqrt(
+                self.num_instances
+            )
+        else:
+            embedding_output = embedding_output.view(
+                modified_batch_size,
+                num_instances,
+                modified_seq_length,
+                embedding_dim,
+            )
+
+            # extract relevant instance embeddings
+            instance_embed = self.instance_embedding[:num_instances, :]
+            instance_embed = instance_embed.unsqueeze(1).expand(
+                num_instances, modified_seq_length, embedding_dim
+            )
+            instance_embed = instance_embed.to(embedding_output.device)
+            embedding_output = embedding_output * instance_embed.unsqueeze(0)
+
+            embedding_output = torch.mean(embedding_output, dim=1)
 
     def forward(
         self,
@@ -166,39 +205,10 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             past_key_values_length=past_key_values_length,
         )
         _, _, embedding_dim = embedding_output.shape
-        if self.muxing_variant == "random_ortho":
-            embedding_output = embedding_output.view(
-                modified_batch_size,
-                num_instances,
-                modified_seq_length,
-                embedding_dim,
-            )
-            embedding_output = torch.matmul(
-                self.instance_embedding, embedding_output.permute(0, 1, 3, 2)
-            )
-            # swap the last 2 dimensions again
-            embedding_output = embedding_output.permute(0, 1, 3, 2)
-            # average across the instances
-            embedding_output = torch.sum(embedding_output, dim=1) / math.sqrt(
-                self.num_instances
-            )
-        else:
-            embedding_output = embedding_output.view(
-                modified_batch_size,
-                num_instances,
-                modified_seq_length,
-                embedding_dim,
-            )
-
-            # extract relevant instance embeddings
-            instance_embed = self.instance_embedding[:num_instances, :]
-            instance_embed = instance_embed.unsqueeze(1).expand(
-                num_instances, modified_seq_length, embedding_dim
-            )
-            instance_embed = instance_embed.to(embedding_output.device)
-            embedding_output = embedding_output * instance_embed.unsqueeze(0)
-
-            embedding_output = torch.mean(embedding_output, dim=1)
+        
+        if self.multiplex_layer_index == 0:
+          self.multiplex(embedding_output, modified_batch_size, 
+          num_instances, modified_seq_length, embedding_dim)
 
         outputs = self.roberta(
             input_ids=None,
@@ -207,6 +217,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             position_ids=position_ids,
             inputs_embeds=embedding_output,
             return_dict=return_dict,
+            mx_layer=self.multiplex_layer_index, #This is where it's modifiedddd, push this param higher
         )
         sequence_output = outputs[0]
         # fancy indexing to get the instance position embedding
