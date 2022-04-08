@@ -706,7 +706,12 @@ class RobertaModel(RobertaPreTrainedModel):
         self.pooler = RobertaPooler(config) if add_pooling_layer else None
 
         # Initialize weights and apply final processing
-        self.post_init()
+        # self.post_init()
+        self.init_weights()
+        if self.supports_gradient_checkpointing and getattr(self.config, "gradient_checkpointing", False):
+            self.gradient_checkpointing_enable()
+            # Remove the attribute now that is has been consumed, so it's no saved in the config.
+            delattr(self.config, "gradient_checkpointing")
 
     def get_input_embeddings(self):
         return self.embeddings.word_embeddings
