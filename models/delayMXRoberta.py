@@ -468,11 +468,13 @@ class RobertaLayer(nn.Module):
 
 # Copied from transformers.models.bert.modeling_bert.BertEncoder with Bert->Roberta
 class RobertaEncoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, mx_layer=0, mx_variant=""):
         super().__init__()
         self.config = config
         self.layer = nn.ModuleList([RobertaLayer(config) for _ in range(config.num_hidden_layers)])
         self.gradient_checkpointing = False
+        self.multiplex_layer_index = mx_layer
+        self.muxing_variant = mx_variant
 
     def multiplex(self, muxing_variant, embedding_output=None, modified_batch_size=None,
                 num_instances=None,
@@ -737,16 +739,15 @@ class RobertaModel(RobertaPreTrainedModel):
     _keys_to_ignore_on_load_missing = [r"position_ids"]
 
     # Copied from transformers.models.bert.modeling_bert.BertModel.__init__ with Bert->Roberta
-    def __init__(self, config, muxing_variant="", mx_layer=0, add_pooling_layer=True):
+    def __init__(self, config, muxing_variant="", add_pooling_layer=True):
         super().__init__(config)
         self.config = config
         print("This is the initiatalization")
         self.muxing_variant = muxing_variant
-        self.multiplex_layer_index = mx_layer
-        print("mx_layer = ", mx_layer)
+        print(self.config)
 
         self.embeddings = RobertaEmbeddings(config)
-        self.encoder = RobertaEncoder(config)
+        self.encoder = RobertaEncoder(config, self.config.multiplex_layer_index, muxing_variant)
 
         self.pooler = RobertaPooler(config) if add_pooling_layer else None
 
