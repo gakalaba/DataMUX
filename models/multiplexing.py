@@ -40,6 +40,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
         self.retrieval_loss_coeff = config.retrieval_loss_coeff
         self.task_loss_coeff = config.task_loss_coeff
         self.multiplex_layer_index = config.multiplex_layer_index # The layer at which we want to start multiplexing
+        print("config vals:", self.muxing_variant, self.multiplex_layer_index, config.num_instances)
 
         self.roberta = RobertaModel(config, add_pooling_layer=False)
         if config.demuxing_variant == "index":
@@ -217,7 +218,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             position_ids=position_ids,
             inputs_embeds=embedding_output,
             return_dict=return_dict,
-            mx_layer=self.multiplex_layer_index, #This is where it's modifiedddd, push this param higher
+            #mx_layer=self.multiplex_layer_index, #This is where it's modifiedddd, push this param higher
         )
         sequence_output = outputs[0]
         # fancy indexing to get the instance position embedding

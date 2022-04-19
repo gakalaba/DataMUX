@@ -476,7 +476,7 @@ class RobertaEncoder(nn.Module):
         self.multiplex_layer_index = mx_layer
         self.muxing_variant = mx_variant
 
-    def multiplex(self, muxing_variant, embedding_output=None, modified_batch_size=None,
+    def multiplex(self, muxing_variant, embedding_output, modified_batch_size=None,
                 num_instances=None,
                 modified_seq_length=None,
                 embedding_dim=None):
@@ -534,10 +534,15 @@ class RobertaEncoder(nn.Module):
         for i, layer_module in enumerate(self.layer):
             if (i == self.multiplex_layer_index):
                 print("TO")
-                print(repr(self.multiplex_layer_index))
-                print(type(self.multiplex_layer_index))
+                print(self.multiplex_layer_index)
                 print("ANJA")
-                hidden_states = self.multiplex(self.muxing_variant, hidden_states)
+                print(self.config.num_instances)
+                #mbs =  // self.config.num_instances
+                hidden_states = self.multiplex(self.muxing_variant, hidden_states, 
+                    modified_batch_size=None, 
+                    num_instances=self.config.num_instances,
+                    modified_seq_length=None,
+                    embedding_dim=hidden_states.shape)
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
