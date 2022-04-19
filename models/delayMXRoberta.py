@@ -474,6 +474,43 @@ class RobertaEncoder(nn.Module):
         self.layer = nn.ModuleList([RobertaLayer(config) for _ in range(config.num_hidden_layers)])
         self.gradient_checkpointing = False
 
+    def multiplex(self, muxing_variant, embedding_output=None, modified_batch_size=None,
+                num_instances=None,
+                modified_seq_length=None,
+                embedding_dim=None):
+      if self.muxing_variant == "random_ortho":
+            embedding_output = embedding_output.view(
+                modified_batch_size,
+                num_instances,
+                modified_seq_length,
+                embedding_dim,
+            )
+            embedding_output = torch.matmul(
+                self.instance_embedding, embedding_output.permute(0, 1, 3, 2)
+            )
+            # swap the last 2 dimensions again
+            embedding_output = embedding_output.permute(0, 1, 3, 2)
+            # average across the instances
+            embedding_output = torch.sum(embedding_output, dim=1) / math.sqrt(
+                self.num_instances
+            )
+      else:
+            embedding_output = embedding_output.view(
+                modified_batch_size,
+                num_instances,
+                modified_seq_length,
+                embedding_dim,
+            )
+
+            # extract relevant instance embeddings
+            instance_embed = self.instance_embedding[:num_instances, :]
+            instance_embed = instance_embed.unsqueeze(1).expand(
+                num_instances, modified_seq_length, embedding_dim
+            )
+            instance_embed = instance_embed.to(embedding_output.device)
+            embedding_output = embedding_output * instance_embed.unsqueeze(0)
+
+            embedding_output = torch.mean(embedding_output, dim=1)
     def forward(
         self,
         hidden_states: torch.Tensor,
@@ -494,6 +531,8 @@ class RobertaEncoder(nn.Module):
         next_decoder_cache = () if use_cache else None
         for i, layer_module in enumerate(self.layer):
             if (i == self.config.multiplex_layer_index):
+                print(self.config.multiplex_layer_index)
+                print("ANJA")
                 hidden_states = self.multiplex(hidden_states)
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)

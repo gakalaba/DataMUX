@@ -217,7 +217,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             position_ids=position_ids,
             inputs_embeds=embedding_output,
             return_dict=return_dict,
-            mx_layer=self.multiplex_layer_index, #This is where it's modifiedddd, push this param higher
+            #mx_layer=self.multiplex_layer_index, #This is where it's modifiedddd, push this param higher
         )
         sequence_output = outputs[0]
         # fancy indexing to get the instance position embedding
