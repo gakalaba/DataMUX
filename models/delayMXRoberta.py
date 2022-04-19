@@ -532,7 +532,8 @@ class RobertaEncoder(nn.Module):
         for i, layer_module in enumerate(self.layer):
             if (i == self.config.multiplex_layer_index):
                 print("TO")
-                print(self.config.multiplex_layer_index)
+                print(repr(self.config.multiplex_layer_index))
+                print(type(self.config.multiplex_layer_index))
                 print("ANJA")
                 hidden_states = self.multiplex(self.muxing_variant, hidden_states)
             if output_hidden_states:
@@ -739,6 +740,7 @@ class RobertaModel(RobertaPreTrainedModel):
     def __init__(self, config, muxing_variant="", add_pooling_layer=True):
         super().__init__(config)
         self.config = config
+        self.muxing_variant = muxing_variant
 
         self.embeddings = RobertaEmbeddings(config)
         self.encoder = RobertaEncoder(config)
