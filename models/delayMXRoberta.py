@@ -478,7 +478,7 @@ class RobertaEncoder(nn.Module):
                 num_instances=None,
                 modified_seq_length=None,
                 embedding_dim=None):
-      if self.muxing_variant == "random_ortho":
+      if muxing_variant == "random_ortho":
             embedding_output = embedding_output.view(
                 modified_batch_size,
                 num_instances,
@@ -531,9 +531,10 @@ class RobertaEncoder(nn.Module):
         next_decoder_cache = () if use_cache else None
         for i, layer_module in enumerate(self.layer):
             if (i == self.config.multiplex_layer_index):
+                print("TO")
                 print(self.config.multiplex_layer_index)
                 print("ANJA")
-                hidden_states = self.multiplex(hidden_states)
+                hidden_states = self.multiplex(self.muxing_variant, hidden_states)
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
@@ -735,7 +736,7 @@ class RobertaModel(RobertaPreTrainedModel):
     _keys_to_ignore_on_load_missing = [r"position_ids"]
 
     # Copied from transformers.models.bert.modeling_bert.BertModel.__init__ with Bert->Roberta
-    def __init__(self, config, add_pooling_layer=True):
+    def __init__(self, config, muxing_variant="", add_pooling_layer=True):
         super().__init__(config)
         self.config = config
 

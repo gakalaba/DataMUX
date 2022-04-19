@@ -315,7 +315,7 @@ class RobertaTokenClassificationMuxed(RobertaPreTrainedModel):
         self.retrieval_loss_coeff = config.retrieval_loss_coeff
         self.task_loss_coeff = config.task_loss_coeff
 
-        self.roberta = RobertaModel(config, add_pooling_layer=False)
+        self.roberta = RobertaModel(config, muxing_variant=self.muxing_variant, add_pooling_layer=False)
         if config.demuxing_variant == "index":
             self.demultiplexer = RobertaIndexDemultiplexerTokenClassification(config)
             self.retrieval_head = RetrievalHeadIndexDemultiplexing(config)
