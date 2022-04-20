@@ -479,7 +479,8 @@ class RobertaEncoder(nn.Module):
     def multiplex(self, muxing_variant, embedding_output, modified_batch_size=None,
                 num_instances=None,
                 modified_seq_length=None,
-                embedding_dim=None):
+                embedding_dim=None,
+                instance_embs=None):
       if muxing_variant == "random_ortho":
             embedding_output = embedding_output.view(
                 modified_batch_size,
@@ -488,7 +489,7 @@ class RobertaEncoder(nn.Module):
                 embedding_dim,
             )
             embedding_output = torch.matmul(
-                self.instance_embedding, embedding_output.permute(0, 1, 3, 2)
+                instance_embs, embedding_output.permute(0, 1, 3, 2)
             )
             # swap the last 2 dimensions again
             embedding_output = embedding_output.permute(0, 1, 3, 2)
@@ -505,7 +506,7 @@ class RobertaEncoder(nn.Module):
             )
 
             # extract relevant instance embeddings
-            instance_embed = self.instance_embedding[:num_instances, :]
+            instance_embed = instance_embs[:num_instances, :]
             instance_embed = instance_embed.unsqueeze(1).expand(
                 num_instances, modified_seq_length, embedding_dim
             )
@@ -525,6 +526,12 @@ class RobertaEncoder(nn.Module):
         output_attentions: Optional[bool] = False,
         output_hidden_states: Optional[bool] = False,
         return_dict: Optional[bool] = True,
+        mx_layer=0,
+        mbs=0,
+        num_is=0,
+        msl=0,
+        ed=0,
+        instance_embs=None,
     ) -> Union[Tuple[torch.Tensor], BaseModelOutputWithPastAndCrossAttentions]:
         all_hidden_states = () if output_hidden_states else None
         all_self_attentions = () if output_attentions else None
@@ -537,12 +544,17 @@ class RobertaEncoder(nn.Module):
                 print(self.multiplex_layer_index)
                 print("ANJA")
                 print(self.config.num_instances)
-                #mbs =  // self.config.num_instances
+                print("mx_layer = ", mx_layer)
+                print("mbs = ", mbs)
+                print("num_is = ", num_is)
+                print("msl = ", msl)
+                print("ed = ", ed)
                 hidden_states = self.multiplex(self.muxing_variant, hidden_states, 
-                    modified_batch_size=None, 
-                    num_instances=self.config.num_instances,
-                    modified_seq_length=None,
-                    embedding_dim=hidden_states.shape)
+                    modified_batch_size=mbs, 
+                    num_instances=num_is,
+                    modified_seq_length=msl,
+                    embedding_dim=ed,
+                    instance_embs=instance_embs)
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
@@ -800,6 +812,12 @@ class RobertaModel(RobertaPreTrainedModel):
         use_cache: Optional[bool] = None,
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
+        mx_layer=0,
+        mbs=None,
+        num_is=None,
+        msl=None,
+        ed=None,
+        instance_embs=None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple[torch.Tensor], BaseModelOutputWithPoolingAndCrossAttentions]:
         r"""
@@ -897,6 +915,12 @@ class RobertaModel(RobertaPreTrainedModel):
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
+            mx_layer=mx_layer,
+            mbs=mbs,
+            num_is=num_is,
+            msl=msl,
+            ed=ed,
+            instance_embs=instance_embs,
         )
         sequence_output = encoder_outputs[0]
         pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
