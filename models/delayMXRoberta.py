@@ -539,11 +539,8 @@ class RobertaEncoder(nn.Module):
 
         next_decoder_cache = () if use_cache else None
         for i, layer_module in enumerate(self.layer):
-            if (i == self.multiplex_layer_index):
-                print("TO")
-                print(self.multiplex_layer_index)
-                print("ANJA")
-                print(self.config.num_instances)
+            if (i == mx_layer):
+                print("multiplexing at layer", mx_layer)
                 print("mx_layer = ", mx_layer)
                 print("mbs = ", mbs)
                 print("num_is = ", num_is)
@@ -759,9 +756,7 @@ class RobertaModel(RobertaPreTrainedModel):
     def __init__(self, config, muxing_variant="", add_pooling_layer=True):
         super().__init__(config)
         self.config = config
-        print("This is the initiatalization")
         self.muxing_variant = muxing_variant
-        print(self.config)
 
         self.embeddings = RobertaEmbeddings(config)
         self.encoder = RobertaEncoder(config, self.config.multiplex_layer_index, muxing_variant)

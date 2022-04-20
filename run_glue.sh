@@ -8,6 +8,7 @@ USE_SLURM=0
 NUM_INSTANCES=1
 DEMUXING="index"
 MUXING="gaussian_hadamard"
+MX_LAYER=0
 CONFIG_NAME="configs/ablations/base_model/roberta.json"
 LEARNING_RATE=5e-5
 TASK_NAME="mnli"
@@ -34,6 +35,7 @@ show_help() {
     echo '--continue'
     echo '--do_train'
     echo '--do_eval'
+    echo '--mx_layer'
 }
 
 die() {
@@ -72,6 +74,15 @@ while :; do
                 shift
             else
                 die 'ERROR: "--muxing" requires a non-empty option argument.'
+            fi
+        ;;
+
+        -mxl|--mx_layer)
+            if [ "$2" ]; then
+                MX_LAYER=$2
+                shift
+            else
+                die 'ERROR: "--mx_layer" requires a non-empty option argument.'
             fi
         ;;
         
@@ -270,6 +281,7 @@ CMD="python run_glue.py \
 --retrieval_pretraining ${RETRIEVAL_PRETRAINING} \
 --num_instances ${NUM_INSTANCES} \
 --muxing_variant ${MUXING} \
+--multiplex_layer_index ${MX_LAYER} \
 --demuxing_variant ${DEMUXING} \
 --should_mux ${SHOULD_MUX} \
 --gaussian_hadamard_norm ${RANDOM_ENCODING_NORM} \

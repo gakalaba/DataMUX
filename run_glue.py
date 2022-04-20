@@ -221,6 +221,10 @@ class ModelArguments:
         default="gaussian_hadamard",
         metadata={"help": "muxing variant; choose from gaussian_hadamard or random_ortho or binary_hadamard"},
     )
+    multiplex_layer_index: Optional[int] = field(
+        default=0,
+        metadata={"help": "The layer index at which we multiplex"},
+    )
     demuxing_variant: Optional[str] = field(
         default="index",
         metadata={"help": "demuxing variant, choose from  'index' or 'mlp'"},
@@ -440,6 +444,7 @@ def main():
     config.retrieval_loss_coeff = model_args.retrieval_loss_coeff
     config.task_loss_coeff = model_args.task_loss_coeff
     config.learn_muxing = model_args.learn_muxing
+    config.multiplex_layer_index = model_args.multiplex_layer_index
 
     model_path_supplied = model_args.model_name_or_path is not None
     if model_args.should_mux:

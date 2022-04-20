@@ -40,7 +40,6 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
         self.retrieval_loss_coeff = config.retrieval_loss_coeff
         self.task_loss_coeff = config.task_loss_coeff
         self.multiplex_layer_index = config.multiplex_layer_index # The layer at which we want to start multiplexing
-        print("config vals:", self.muxing_variant, self.multiplex_layer_index, config.num_instances)
 
         self.roberta = RobertaModel(config, add_pooling_layer=False)
         if config.demuxing_variant == "index":
@@ -86,11 +85,12 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
         else:
             self.instance_embedding.requires_grad = True
 
-    def multiplex(self, embedding_output=None, modified_batch_size=None,
+    def multiplex(self, muxing_variant, embedding_output, modified_batch_size=None,
                 num_instances=None,
                 modified_seq_length=None,
-                embedding_dim=None):
-      if self.muxing_variant == "random_ortho":
+                embedding_dim=None,
+                instance_embs=None):
+      if muxing_variant == "random_ortho":
             embedding_output = embedding_output.view(
                 modified_batch_size,
                 num_instances,
@@ -98,7 +98,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
                 embedding_dim,
             )
             embedding_output = torch.matmul(
-                self.instance_embedding, embedding_output.permute(0, 1, 3, 2)
+                instance_embs, embedding_output.permute(0, 1, 3, 2)
             )
             # swap the last 2 dimensions again
             embedding_output = embedding_output.permute(0, 1, 3, 2)
@@ -115,7 +115,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             )
 
             # extract relevant instance embeddings
-            instance_embed = self.instance_embedding[:num_instances, :]
+            instance_embed = instance_embs[:num_instances, :]
             instance_embed = instance_embed.unsqueeze(1).expand(
                 num_instances, modified_seq_length, embedding_dim
             )
@@ -208,8 +208,14 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
         _, _, embedding_dim = embedding_output.shape
         
         if self.multiplex_layer_index == 0:
-          self.multiplex(embedding_output, modified_batch_size, 
-          num_instances, modified_seq_length, embedding_dim)
+          print("Multiplexing around entire Model")
+          self.multiplex(self.muxing_variant, embedding_output, 
+          modified_batch_size=modified_batch_size, 
+          num_instances=num_instances, 
+          modified_seq_length=modified_seq_length, 
+          embedding_dim=embedding_dim,
+          instance_embs=self.instance_embedding)
+          self.multiplex_layer_index = -1
 
         outputs = self.roberta(
             input_ids=None,
