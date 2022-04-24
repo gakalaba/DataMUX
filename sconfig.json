@@ -1,0 +1,11 @@
+{
+    "cluster": [
+      "20",
+      "12"
+    ],
+    "job_queue": {
+        "job1" : {"accuracy": 99, "latency": 200},
+        "job2" : {"accuracy": 90, "latency": 100}
+    }
+}
+  

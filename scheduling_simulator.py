@@ -1,3 +1,5 @@
+import json
+
 def schedule(jobs, cluster):
     '''
     Given a configuration of nodes over which all models are distributed
@@ -23,10 +25,20 @@ def schedule(jobs, cluster):
 class Queue:
     def __init__(self, config):
         self.config = config
-    def parse(config):
+        self.parse(config)
+
+    def parse(self, config):
         # parse the config
+        f = open(config,)
+        data = json.load(f)
+        f.close()
+        self.cluster = [int(x) for x in data['cluster']]
+        print(self.cluster)
+        self.jobq = data['job_queue']
+        self.num_gpus = len(self.cluster)
+        self.num_jobs = len(self.job_q)
 
-def main():
-    jobs = create_jobs(config)
-    jobs = queue()
+def main(config):
+    jobs = Queue(config)
 
+main('sconfig.json')
