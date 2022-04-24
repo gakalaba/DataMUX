@@ -263,7 +263,7 @@ fi
 
 BATCH_SIZE=$(($BATCH_SIZE * NUM_INSTANCES))
 
-CMD="python run_glue.py \
+CMD="python3 run_glue.py \
 --tokenizer_name roberta-base \
 --config_name ${CONFIG_NAME} \
 --max_seq_length $MAX_SEQ_LENGTH \
