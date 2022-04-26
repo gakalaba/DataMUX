@@ -259,7 +259,6 @@ class RobertaSelfAttention(nn.Module):
         if attention_mask is not None:
             # Apply the attention mask is (precomputed for all layers in RobertaModel forward() function)
             attention_scores = attention_scores + attention_mask
-            print("attention scores = ", attention_scores.shape, "mask = ", attention_mask.shape)
 
         # Normalize the attention scores to probabilities.
         attention_probs = nn.functional.softmax(attention_scores, dim=-1)
@@ -545,11 +544,6 @@ class RobertaEncoder(nn.Module):
         for i, layer_module in enumerate(self.layer):
             if (i == mx_layer):
                 print("multiplexing at layer", mx_layer)
-                print("mx_layer = ", mx_layer)
-                print("mbs = ", mbs)
-                print("num_is = ", num_is)
-                print("msl = ", msl)
-                print("ed = ", ed)
                 hidden_states = self.multiplex(self.muxing_variant, hidden_states, 
                     modified_batch_size=mbs, 
                     num_instances=num_is,
@@ -558,11 +552,8 @@ class RobertaEncoder(nn.Module):
                     instance_embs=instance_embs)
                 input_shape = hidden_states.size()[:-1]
                 batch_size, seq_length = input_shape
-                print("batch_size + seq_length after = ", batch_size, seq_length)
                 am = torch.ones(((batch_size, seq_length + pkvl)), device=hidden_states.device)
-                print("attention_mask after being made first time = ", am.shape)
                 attention_mask: torch.Tensor = f(am, input_shape, hidden_states.device)
-                print("attention_mask after being extended first time = ", attention_mask.shape)
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
@@ -865,7 +856,6 @@ class RobertaModel(RobertaPreTrainedModel):
             raise ValueError("You have to specify either input_ids or inputs_embeds")
 
         batch_size, seq_length = input_shape
-        print("batch_size + seq_length before = ", batch_size, seq_length)
         device = input_ids.device if input_ids is not None else inputs_embeds.device
 
         # past_key_values_length
@@ -873,7 +863,6 @@ class RobertaModel(RobertaPreTrainedModel):
 
         if attention_mask is None:
             attention_mask = torch.ones(((batch_size, seq_length + past_key_values_length)), device=device)
-        print("First ever attention_mask = ", attention_mask.shape)
         if token_type_ids is None:
             if hasattr(self.embeddings, "token_type_ids"):
                 buffered_token_type_ids = self.embeddings.token_type_ids[:, :seq_length]
@@ -885,7 +874,6 @@ class RobertaModel(RobertaPreTrainedModel):
         # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
         # ourselves in which case we just need to make it broadcastable to all heads.
         extended_attention_mask: torch.Tensor = self.get_extended_attention_mask(attention_mask, input_shape, device)
-        print("then after extending = ", extended_attention_mask.shape)
         # If a 2D or 3D attention mask is provided for the cross-attention
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
         if self.config.is_decoder and encoder_hidden_states is not None:
