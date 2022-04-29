@@ -123,6 +123,8 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             embedding_output = embedding_output * instance_embed.unsqueeze(0)
 
             embedding_output = torch.mean(embedding_output, dim=1)
+      return embedding_output
+
 
     def forward(
         self,
@@ -206,16 +208,18 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             past_key_values_length=past_key_values_length,
         )
         _, _, embedding_dim = embedding_output.shape
-        
+        print("size of inputs before mx = ", embedding_output.shape)
         if self.multiplex_layer_index == 0:
           print("Multiplexing around entire Model")
-          self.multiplex(self.muxing_variant, embedding_output, 
+          embedding_output = self.multiplex(self.muxing_variant, embedding_output, 
           modified_batch_size=modified_batch_size, 
           num_instances=num_instances, 
           modified_seq_length=modified_seq_length, 
           embedding_dim=embedding_dim,
           instance_embs=self.instance_embedding)
+          
           self.multiplex_layer_index = -1
+          print(embedding_output.shape)
 
         outputs = self.roberta(
             input_ids=None,
@@ -231,7 +235,9 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             ed=embedding_dim,
             instance_embs=self.instance_embedding,
         )
+        
         sequence_output = outputs[0]
+        print("sequence_output shape AFTER mx", sequence_output.shape)
         # fancy indexing to get the instance position embedding
         assert (
             labels is not None
@@ -240,7 +246,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
         assert len(labels.shape) == 1  # assert one dimension
 
         logits = self.demultiplexer(sequence_output)
-
+        print("sequence_outpu AFTER dmux", sequence_output.shape)
         instance_labels = torch.full(
             (modified_batch_size, modified_seq_length),
             0,
@@ -266,6 +272,7 @@ class RobertaSequenceClassificationMuxed(RobertaPreTrainedModel):
             .expand(modified_batch_size, modified_seq_length),
             instance_labels,
         ]
+        print("instance_labels after stuff", instance_labels.shape)
         retrieval_labels[:, :special_tokens_end_position] = -100
 
         pad_mask = retrieval_labels == 1
