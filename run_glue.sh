@@ -11,7 +11,7 @@ MUXING="gaussian_hadamard"
 MX_LAYER=0
 CONFIG_NAME="configs/ablations/base_model/roberta.json"
 LEARNING_RATE=5e-5
-TASK_NAME="mnli"
+TASK_NAME="qnli"
 LEARN_MUXING=0
 CONTINUE_TRAIN=0
 DO_TRAIN=0
@@ -188,8 +188,8 @@ if [ "$SETTING" = "retrieval_pretraining" ]; then
     --dataset_config_name ${DATASET_CONFIG_NAME} \
     --evaluation_strategy steps \
     --eval_steps 10000 \
-    --max_steps 500000 \
-    --save_steps 10000"
+    --max_steps 12000 \
+    --save_steps 4000"
     
     elif [ "$SETTING" = "finetuning" ]; then
     
@@ -209,8 +209,8 @@ if [ "$SETTING" = "retrieval_pretraining" ]; then
     CMD_DIFF="--task_name ${TASK_NAME}\
     --evaluation_strategy steps \
     --eval_steps 10000 \
-    --max_steps 500000 \
-    --save_steps 10000 "
+    --max_steps 12000 \
+    --save_steps 4000 "
 
 elif [ "$SETTING" = "baseline" ]; then
 
