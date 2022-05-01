@@ -446,6 +446,7 @@ def main():
     config.learn_muxing = model_args.learn_muxing
     config.multiplex_layer_index = model_args.multiplex_layer_index
 
+    print("the passed down mx layer index is", config.multiplex_layer_index)
     model_path_supplied = model_args.model_name_or_path is not None
     if model_args.should_mux:
         
